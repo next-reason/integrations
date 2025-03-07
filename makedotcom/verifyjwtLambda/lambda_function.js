@@ -1,5 +1,6 @@
-export const handler = async (event, context) => {
-  const jwt = event['token'];
+//export const handler = async (event, context) => {  //uncomment this line and comment the next line if you want to use this function as a lambda function
+//  const jwt = event['token'];
+  const jwt = ''; //put your testing JWT here to run locally
 
   const isValid = verifyJwtSignature(jwt);
   console.log('JWT signature is valid:', isValid);
@@ -67,8 +68,8 @@ export const handler = async (event, context) => {
       return Uint8Array.from(atob(base64), c => c.charCodeAt(0));
   }
   
-  //console.log(decodedPayload.events);
+  console.log(decodedPayload.events);
   
   
   return decodedPayload.events;
-};
+//};

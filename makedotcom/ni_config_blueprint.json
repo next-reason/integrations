@@ -123,7 +123,7 @@
                 "useNewZLibDeCompress": true
             },
             "mapper": {
-                "url": "https://id.eu.nextreason.com/idp/v1/account/users/find",
+                "url": "https://NEXTIDENTITY-ISS-URL.com/idp/v1/account/users/find",
                 "serializeUrl": false,
                 "method": "get",
                 "headers": [

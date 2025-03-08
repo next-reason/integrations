@@ -1,27 +1,27 @@
 {
-    "name": "Next Identity Integration to Capsule",
+    "name": "Next Identity to Capsule (Transactional Workflow Decode)",
     "flow": [
         {
-            "id": 2,
+            "id": 13,
             "module": "gateway:CustomWebHook",
             "version": 1,
             "parameters": {
-                "hook": 458275,
+                "hook": 497219,
                 "maxResults": 1
             },
             "mapper": {},
             "metadata": {
                 "designer": {
-                    "x": -387,
-                    "y": -45
+                    "x": -243,
+                    "y": -184
                 },
                 "restore": {
                     "parameters": {
                         "hook": {
+                            "label": "Next Identity Workflow",
                             "data": {
                                 "editable": "true"
-                            },
-                            "label": "Next Identity Workflow Receive"
+                            }
                         }
                     }
                 },
@@ -37,319 +37,178 @@
                         "type": "number",
                         "label": "Maximum number of results"
                     }
+                ],
+                "interface": [
+                    {
+                        "name": "value",
+                        "type": "text"
+                    },
+                    {
+                        "name": "__IMTMETHOD__",
+                        "type": "text",
+                        "label": "Method"
+                    }
                 ]
             }
         },
         {
-            "id": 19,
-            "module": "amazon-lambda:invokeAFunction",
+            "id": 2,
+            "module": "util:SetVariable2",
+            "version": 1,
+            "parameters": {},
+            "filter": {
+                "name": "if POST",
+                "conditions": [
+                    [
+                        {
+                            "a": "{{13.`__IMTMETHOD__`}}",
+                            "o": "text:equal",
+                            "b": "POST"
+                        }
+                    ]
+                ]
+            },
+            "mapper": {
+                "name": "jwt",
+                "scope": "roundtrip",
+                "value": "{{split(13.value; \".\")}}"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 4,
+                    "y": 80
+                },
+                "restore": {
+                    "expect": {
+                        "scope": {
+                            "label": "One cycle"
+                        }
+                    }
+                },
+                "expect": [
+                    {
+                        "name": "name",
+                        "type": "text",
+                        "label": "Variable name",
+                        "required": true
+                    },
+                    {
+                        "name": "scope",
+                        "type": "select",
+                        "label": "Variable lifetime",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "roundtrip",
+                                "execution"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "value",
+                        "type": "any",
+                        "label": "Variable value"
+                    }
+                ],
+                "interface": [
+                    {
+                        "name": "jwt",
+                        "type": "any",
+                        "label": "jwt"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 9,
+            "module": "util:SetVariable2",
+            "version": 1,
+            "parameters": {},
+            "mapper": {
+                "name": "id_token",
+                "scope": "roundtrip",
+                "value": "{{toString(toBinary(2.jwt[2]; \"base64\"))}}"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 212,
+                    "y": -128
+                },
+                "restore": {
+                    "expect": {
+                        "scope": {
+                            "label": "One cycle"
+                        }
+                    }
+                },
+                "expect": [
+                    {
+                        "name": "name",
+                        "type": "text",
+                        "label": "Variable name",
+                        "required": true
+                    },
+                    {
+                        "name": "scope",
+                        "type": "select",
+                        "label": "Variable lifetime",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "roundtrip",
+                                "execution"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "value",
+                        "type": "any",
+                        "label": "Variable value"
+                    }
+                ],
+                "interface": [
+                    {
+                        "name": "id_token",
+                        "type": "any",
+                        "label": "id_token"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 11,
+            "module": "json:ParseJSON",
             "version": 1,
             "parameters": {
-                "__IMTCONN__": 2102985
+                "type": ""
             },
             "mapper": {
-                "body": "{\"token\":\"{{2.value}}\"}",
-                "function": "verifyJwtJs",
-                "InvocationType": "RequestResponse"
+                "json": "{{9.id_token}}"
             },
             "metadata": {
                 "designer": {
-                    "x": 5,
-                    "y": -48
+                    "x": 407,
+                    "y": 85
                 },
                 "restore": {
-                    "expect": {
-                        "function": {
-                            "mode": "chose",
-                            "label": "verifyJwtJs ($LATEST)"
-                        },
-                        "InvocationType": {
-                            "mode": "chose",
-                            "label": "Request Response"
-                        }
-                    },
                     "parameters": {
-                        "__IMTCONN__": {
-                            "data": {
-                                "scoped": "true",
-                                "connection": "amazon-lambda"
-                            },
-                            "label": "Lambda Connection (US-East Ohio)"
+                        "type": {
+                            "label": "Choose a data structure"
                         }
                     }
                 },
                 "parameters": [
                     {
-                        "name": "__IMTCONN__",
-                        "type": "account:amazon-lambda",
-                        "label": "Connection",
-                        "required": true
+                        "name": "type",
+                        "type": "udt",
+                        "label": "Data structure"
                     }
                 ],
                 "expect": [
                     {
-                        "name": "function",
-                        "type": "select",
-                        "label": "Function Name",
-                        "required": true
-                    },
-                    {
-                        "name": "InvocationType",
-                        "type": "select",
-                        "label": "Invocation Type",
-                        "required": true,
-                        "validate": {
-                            "enum": [
-                                "RequestResponse",
-                                "Event",
-                                "DryRun"
-                            ]
-                        }
-                    },
-                    {
-                        "name": "body",
-                        "type": "any",
-                        "label": "Body"
-                    }
-                ]
-            }
-        },
-        {
-            "id": 4,
-            "module": "http:ActionSendData",
-            "version": 3,
-            "parameters": {
-                "handleErrors": true,
-                "useNewZLibDeCompress": true
-            },
-            "mapper": {
-                "url": "https://NEXTIDENTITY-ISS-URL.com/idp/v1/account/users/find",
-                "serializeUrl": false,
-                "method": "get",
-                "headers": [
-                    {
-                        "name": "Authorization",
-                        "value": "{{var.input.ni_api_key}}"
-                    }
-                ],
-                "qs": [
-                    {
-                        "name": "query_filter",
-                        "value": "uuid='{{19.body.`account/v1/userAuthenticationAction`.sub}}'"
-                    },
-                    {
-                        "name": "client_id",
-                        "value": "{{19.body.`account/v1/userAuthenticationAction`.clientId}}"
-                    },
-                    {
-                        "name": "attributes",
-                        "value": "[\"uuid\", \"givenName\", \"familyName\", \"email\"]"
-                    }
-                ],
-                "bodyType": "",
-                "parseResponse": true,
-                "authUser": "",
-                "authPass": "",
-                "timeout": "",
-                "shareCookies": false,
-                "ca": "",
-                "rejectUnauthorized": true,
-                "followRedirect": true,
-                "useQuerystring": false,
-                "gzip": true,
-                "useMtls": false,
-                "followAllRedirects": false
-            },
-            "metadata": {
-                "designer": {
-                    "x": 383,
-                    "y": -49
-                },
-                "restore": {
-                    "expect": {
-                        "method": {
-                            "mode": "chose",
-                            "label": "GET"
-                        },
-                        "headers": {
-                            "mode": "chose",
-                            "items": [
-                                null
-                            ]
-                        },
-                        "qs": {
-                            "mode": "chose",
-                            "items": [
-                                null,
-                                null,
-                                null
-                            ]
-                        },
-                        "bodyType": {
-                            "label": "Empty"
-                        }
-                    }
-                },
-                "parameters": [
-                    {
-                        "name": "handleErrors",
-                        "type": "boolean",
-                        "label": "Evaluate all states as errors (except for 2xx and 3xx )",
-                        "required": true
-                    },
-                    {
-                        "name": "useNewZLibDeCompress",
-                        "type": "hidden"
-                    }
-                ],
-                "expect": [
-                    {
-                        "name": "url",
-                        "type": "url",
-                        "label": "URL",
-                        "required": true
-                    },
-                    {
-                        "name": "serializeUrl",
-                        "type": "boolean",
-                        "label": "Serialize URL",
-                        "required": true
-                    },
-                    {
-                        "name": "method",
-                        "type": "select",
-                        "label": "Method",
-                        "required": true,
-                        "validate": {
-                            "enum": [
-                                "get",
-                                "head",
-                                "post",
-                                "put",
-                                "patch",
-                                "delete",
-                                "options"
-                            ]
-                        }
-                    },
-                    {
-                        "name": "headers",
-                        "type": "array",
-                        "label": "Headers",
-                        "spec": [
-                            {
-                                "name": "name",
-                                "label": "Name",
-                                "type": "text",
-                                "required": true
-                            },
-                            {
-                                "name": "value",
-                                "label": "Value",
-                                "type": "text"
-                            }
-                        ]
-                    },
-                    {
-                        "name": "qs",
-                        "type": "array",
-                        "label": "Query String",
-                        "spec": [
-                            {
-                                "name": "name",
-                                "label": "Name",
-                                "type": "text",
-                                "required": true
-                            },
-                            {
-                                "name": "value",
-                                "label": "Value",
-                                "type": "text"
-                            }
-                        ]
-                    },
-                    {
-                        "name": "bodyType",
-                        "type": "select",
-                        "label": "Body type",
-                        "validate": {
-                            "enum": [
-                                "raw",
-                                "x_www_form_urlencoded",
-                                "multipart_form_data"
-                            ]
-                        }
-                    },
-                    {
-                        "name": "parseResponse",
-                        "type": "boolean",
-                        "label": "Parse response",
-                        "required": true
-                    },
-                    {
-                        "name": "authUser",
+                        "name": "json",
                         "type": "text",
-                        "label": "User name"
-                    },
-                    {
-                        "name": "authPass",
-                        "type": "password",
-                        "label": "Password"
-                    },
-                    {
-                        "name": "timeout",
-                        "type": "uinteger",
-                        "label": "Timeout",
-                        "validate": {
-                            "max": 300,
-                            "min": 1
-                        }
-                    },
-                    {
-                        "name": "shareCookies",
-                        "type": "boolean",
-                        "label": "Share cookies with other HTTP modules",
-                        "required": true
-                    },
-                    {
-                        "name": "ca",
-                        "type": "cert",
-                        "label": "Self-signed certificate"
-                    },
-                    {
-                        "name": "rejectUnauthorized",
-                        "type": "boolean",
-                        "label": "Reject connections that are using unverified (self-signed) certificates",
-                        "required": true
-                    },
-                    {
-                        "name": "followRedirect",
-                        "type": "boolean",
-                        "label": "Follow redirect",
-                        "required": true
-                    },
-                    {
-                        "name": "useQuerystring",
-                        "type": "boolean",
-                        "label": "Disable serialization of multiple same query string keys as arrays",
-                        "required": true
-                    },
-                    {
-                        "name": "gzip",
-                        "type": "boolean",
-                        "label": "Request compressed content",
-                        "required": true
-                    },
-                    {
-                        "name": "useMtls",
-                        "type": "boolean",
-                        "label": "Use Mutual TLS",
-                        "required": true
-                    },
-                    {
-                        "name": "followAllRedirects",
-                        "type": "boolean",
-                        "label": "Follow all redirect",
+                        "label": "JSON string",
                         "required": true
                     }
                 ]
@@ -360,7 +219,19 @@
             "module": "capsule-crm:createParty",
             "version": 1,
             "parameters": {
-                "__IMTCONN__": 2095237
+                "__IMTCONN__": 2103173
+            },
+            "filter": {
+                "name": "if register",
+                "conditions": [
+                    [
+                        {
+                            "a": "{{first(keys(11.events))}}",
+                            "b": "account/v1/register",
+                            "o": "text:equal"
+                        }
+                    ]
+                ]
             },
             "mapper": {
                 "tags": [],
@@ -371,21 +242,21 @@
                 "websites": [],
                 "addresses": [],
                 "job_title": "",
-                "last_name": "{{4.data.results[].familyName}}",
-                "first_name": "{{4.data.results[].givenName}}",
+                "last_name": "",
+                "first_name": "{{11.events.`account/v1/register`.firstName}}",
                 "organisation": 268352317,
                 "phoneNumbers": [],
                 "emailAddresses": [
                     {
                         "type": "",
-                        "address": "{{4.data.results[].email}}"
+                        "address": "{{11.events.`account/v1/register`.email}}"
                     }
                 ]
             },
             "metadata": {
                 "designer": {
-                    "x": 758,
-                    "y": -55
+                    "x": 641,
+                    "y": -119
                 },
                 "restore": {
                     "expect": {
@@ -433,7 +304,7 @@
                                 "scoped": "true",
                                 "connection": "capsule-crm"
                             },
-                            "label": "My Capsule CRM connection (nszytel)"
+                            "label": "Make Integration (nszytel)"
                         }
                     }
                 },
@@ -782,18 +653,5 @@
         },
         "zone": "us2.make.com",
         "notes": []
-    },
-    "io": {
-        "input_spec": [
-            {
-                "name": "ni_api_key",
-                "label": "",
-                "type": "text",
-                "default": "API_KEY_HERE",
-                "required": false,
-                "multiline": false
-            }
-        ],
-        "output_spec": []
     }
 }
